@@ -109,6 +109,7 @@ exports.deleteUser = async (req, res) => {
         res.status(422).json(error);
     }
 }
+
 exports.updateUser = async (req, res) => {
     try {
         const { _id } = req.params;
@@ -168,6 +169,7 @@ exports.adminLogin = (req, res, next) => {
         });
     });
 };
+
 exports.shopAdminLogin = (req, res, next) => {
     const { email, password } = req.body;
     userService.shopAdminLogin({ email, password }, (error, result) => {
@@ -259,8 +261,6 @@ exports.vegetableGet = async (req, res, next) => {
 //    }
 //  };
 
-
-
 exports.Productregister = async (req, res, next) => {
    
     const owner = req.user.data
@@ -337,7 +337,7 @@ exports.Product = async (req, res, next) => {
     }]
     var obj = {
        
-        img:req.file.path,
+        img:req.file.filename,
        
     }
     var product = await Image.findOne({product_name:product_name})
@@ -373,9 +373,9 @@ exports.getimageproduct = async (req, res) => {
         console.log("error")
         res.json(error)
     }
-    }
-
-    exports.oneimageproduct = async (req, res) => {
+}
+    
+exports.oneimageproduct = async (req, res) => {
         console.log(req.params);
       
         try {
@@ -388,7 +388,7 @@ exports.getimageproduct = async (req, res) => {
             console.log("error")
             res.json(error)
         }
-        }
+}
 
 exports.Todoregister = (req, res, next) => {
     console.log("ee");
@@ -505,6 +505,7 @@ exports.deleteProduct = async (req, res) => {
         res.status(422).json(error);
     }
 }
+
 exports.updateProduct = async (req, res) => {
     try {
         const { _id } = req.params;
@@ -536,6 +537,7 @@ exports.getonedata = async (req, res, next) => {
     }
 
 }
+
 // exports.addCart = async (req, res,next) => {
 //    try{
 //     const owner=req.user.data
@@ -734,13 +736,11 @@ exports.cartOne = async (req, res, next) => {
     }
 }
 
-
-
 exports.addOrder = async (req, res, next) => {
     const owner = req.user.data
 const delivery_mode=req.body.delivery_mode
     const quantity = req.body.quantity
-    const { _id } = req.params;
+    const _id = req.body._id;
     const user = await User.findOne({ _id:owner })
     console.log(owner)
 
@@ -912,8 +912,9 @@ exports.addorder1 = async (req, res, next) => {
     const streetName = req.body.streetName;
     const landMark = req.body.landMark;
     const city = req.body.city;
+    const delivery_mode=req.body.delivery_mode;
     const pincode = req.body.pincode;
-const owner1=req.body.owner1;
+    const owner1=req.body.owner1;
     const quantity = req.body.quantity
     const { _id } = req.params;
     console.log(req.body);
@@ -922,7 +923,7 @@ const owner1=req.body.owner1;
     try {
         
         const order = await Order.findOne( {owner1});
-        const item = await Product.findOne({ _id: _id });
+        const item = await Image.findOne({ _id: _id });
         if (!item) {
             res.status(404).send({ message: "item not found" });
             return;
@@ -943,6 +944,7 @@ const owner1=req.body.owner1;
 
         if (order) {
             order.ownerName = ownerName;
+            order.delivery_mode = delivery_mode,
             order.address[0] = addr[0];
             console.log(addr[0].phoneNumber)
             const itemIndex = order.items.findIndex((item) => item._id == _id);
@@ -957,6 +959,9 @@ const owner1=req.body.owner1;
 
                 order.items[itemIndex] = product;
                 await order.save();
+                const updateduser = await Image.findByIdAndUpdate(_id, { $inc: {'quantity': -quantity} }, {
+                    new: true
+                });
                 res.status(200).send(order);
             } else {
 
@@ -966,15 +971,21 @@ const owner1=req.body.owner1;
                     return acc + curr.quantity * curr.price;
                 }, 0)
                 await order.save();
-                res.status(200).JSON(order);
+                const updateduser = await Image.findByIdAndUpdate(_id, { $inc: {'quantity': -quantity} }, {
+                    new: true
+                });
+                res.status(200).send(order);
             }
         } else {
             //no cart exists, create one
             const newOrder = await Order.create({
-                owner1, ownerName,
+                owner1, ownerName,delivery_mode,
                 items: [{ _id, name, quantity, price }],
                 bill: quantity * price,
                 address: addr[0]
+            });
+            const updateduser = await Image.findByIdAndUpdate(_id, { $inc: {'quantity': -quantity} }, {
+                new: true
             });
             return res.status(201).send(newOrder);
         }
@@ -986,6 +997,69 @@ const owner1=req.body.owner1;
     }
 }
 
+exports.cancelbyuser = async (req, res, next) => {
+    const owner = req.user.data;
+    const { _id } = req.params;
+    const quantity=req.body.quantity
+    try {
+        const order = await Order.findOne({ owner });
+        const itemIndex = order.items.findIndex((item) => item._id == _id);
+
+        if (itemIndex > -1) {
+            let product = order.items[itemIndex];
+            product.quantity -= quantity;
+            order.bill = order.items.reduce((acc, curr) => {
+                return acc + curr.quantity * curr.price;
+            }, 0)
+            order.items[itemIndex].quantity = product.quantity ;
+            await order.save();
+            const updateduser = await Image.findByIdAndUpdate(_id, { $inc: {'quantity': quantity} }, {
+                new: true
+            });
+            res.status(200).json( order.items[itemIndex].quantity);
+        } else {
+            res.status(404).send("item not found");
+        }
+        console.log(order.items[itemIndex].name)
+    } catch (error) {
+        console.log(error);
+        res.status(400).send();
+    }
+}
+
+exports.cancelbyadmin = async (req, res, next) => {
+    const owner = req.user.data;
+    const { _id } = req.params;
+    // const quantity=req.body.quantity
+    try {
+        let order = await Order.findOne({ owner });
+
+        const itemIndex = order.items.findIndex((item) => item._id == _id);
+
+        if (itemIndex > -1) {
+            let item = order.items[itemIndex];
+            // item.quantity -= quantity;
+            order.bill -= item.quantity * item.price;
+            if (order.bill < 0) {
+                order.bill = 0
+            }
+            order.items.splice(itemIndex, 1);
+            order.bill = order.items.reduce((acc, curr) => {
+                return acc + curr.quantity * curr.price;
+            }, 0)
+            order = await order.save();
+            const updateduser = await Image.findByIdAndUpdate(_id, { $inc: {'quantity': quantity} }, {
+                new: true
+            });
+            res.status(200).send(order);
+        } else {
+            res.status(404).send("item not found");
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(400).send();
+    }
+}
 
 
 

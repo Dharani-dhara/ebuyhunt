@@ -42,7 +42,7 @@ routes.get("/getonedata/:_id/deleteCart", Auth.authenticateToken ,userController
 routes.get("/cartone/:_id", Auth.authenticateToken ,userController.cartOne)
 routes.get("/getonedata/:_id/review",userController.createProductReview)
 routes.post("/todoregister",userController.Todoregister)
-routes.get("/addOrder/:_id", Auth.authenticateToken ,userController.addOrder)
+routes.post("/addOrder", Auth.authenticateToken ,userController.addOrder)
 routes.get("/addorder1/:_id", Auth.authenticateToken ,userController.addorder1)
 
 routes.get("/getOrder", Auth.authenticateToken ,userController.getOrder)
@@ -50,6 +50,8 @@ routes.get("/getorders", Auth.authenticateToken ,userController.getorders)
 routes.get("/getallOrder", Auth.authenticateToken ,userController.getallOrder)
 routes.get("/getuserorder/:_id", Auth.authenticateToken ,userController.getuserorder)
 routes.get("/getIdorder/:_id", Auth.authenticateToken ,userController.getIdorder)
+routes.get("/cancelbyuser/:_id", Auth.authenticateToken ,userController.cancelbyuser)
+//routes.get("/cancelbyadmin", Auth.authenticateToken ,userController.cancelbyadmin)
 routes.get("/todoget",userController.Todoget)
 routes.get("/todoget",userController.Todoget)
 // routes.get("/cart",  async (req, res) => {

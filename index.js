@@ -168,7 +168,7 @@ app.use(
             { url: "/product/ratingsort", methods: ["GET"] },
             { url: "/users/cart", methods: ["GET"] },
             { url: "/users/cartone/:_id", methods: ["GET"] },
-            { url: "/users/addOrder/:_id", methods: ["GET"] },
+            { url: "/users/addOrder", methods: ["POST"] },
             { url: "/users/addorder1/:_id", methods: ["GET"] },
             { url: "/users/getOrder", methods: ["GET"] },
             { url: "/users/getorders", methods: ["GET"] },
@@ -178,6 +178,8 @@ app.use(
             { url: "/users/profile", methods: ["Post"] },
             { url: "/product/getimageproduct", methods: ["GET"] },
             { url: "/product/oneimageproduct/:_id", methods: ["GET"] },
+            { url: "/users/cancelbyuser/:_id", methods: ["GET"] },
+            
           ],
     })
 );
