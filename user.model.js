@@ -26,6 +26,7 @@ const userSchema = new Schema({
     },
      phoneNumber: {
         type: String,
+        unique: true,
         required: true,
     },
     shopName:{
@@ -69,6 +70,7 @@ const userSchema = new Schema({
         enum : ['user','admin','shopAdmin','owner'],
         default: 'user'
     },
+    
 });
 
 const User = mongoose.model("user", userSchema);
